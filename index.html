@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>SimJot — Prototype</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans Thai',sans-serif;background:#f0f0f0;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px;}
+#ph{display:flex;flex-direction:column;width:375px;height:750px;border-radius:40px;overflow:hidden;background:#f7f7f7;box-shadow:0 20px 60px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.08);}
+.sb{background:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 24px 10px;flex-shrink:0;font-size:12px;color:#999;}
+.sb .time{font-weight:600;color:#111;font-size:13px;}
+.sb .title{font-weight:600;color:#111;font-size:14px;}
+#ca{flex:1;overflow-y:auto;background:#f7f7f7;-webkit-overflow-scrolling:touch;}
+#ca::-webkit-scrollbar{display:none;}
+.screen{padding:0 0 20px;}
+.hdr{background:#fff;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0;}
+.hdr-title{font-size:16px;font-weight:600;color:#111;}
+.hdr-sub{font-size:11px;color:#999;margin-top:2px;}
+.card{background:#fff;border-radius:14px;margin:12px 16px 0;padding:16px;border:1px solid #f0f0f0;}
+.card-title{font-size:13px;font-weight:600;color:#111;margin-bottom:12px;}
+.prog-bar{height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin-bottom:6px;}
+.prog-fill{height:100%;border-radius:3px;background:#EF9F27;}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block;}
+.txn-row{padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f5f5f5;}
+.txn-row:last-child{border-bottom:none;}
+.nav{flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0;display:flex;padding:6px 0 16px;box-shadow:0 -1px 0 #f0f0f0;}
+.nb{flex:1;background:none;border:none;cursor:pointer;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#bbb;font-size:10px;font-family:inherit;}
+.nb.on{color:#111;}
+.fab-wrap{width:40px;height:40px;background:#1D9E75;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:-10px;border:3px solid #fff;}
+.form-row{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f5f5f5;}
+.form-row:last-child{border-bottom:none;}
+.form-label{font-size:13px;color:#888;}
+.btn-save{width:100%;padding:14px;background:#1D9E75;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-ocr{width:100%;padding:12px;background:transparent;color:#378ADD;border:1px solid #378ADD;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:10px;}
+.pay-btn{font-size:12px;padding:5px 11px;border-radius:20px;border:1px solid #e0e0e0;background:#f7f7f7;color:#555;cursor:pointer;font-family:inherit;}
+.pay-btn.on{background:rgba(29,158,117,0.1);border-color:#1D9E75;color:#1D9E75;}
+.cat-btn{display:flex;align-items:center;gap:7px;padding:9px 10px;border-radius:10px;border:1px solid #ebebeb;background:#f7f7f7;cursor:pointer;text-align:left;width:100%;font-size:12px;color:#333;font-family:inherit;}
+.cat-btn.on{border-color:currentColor;}
+.budget-row{padding:12px 16px;border-bottom:1px solid #f5f5f5;}
+.budget-row:last-child{border-bottom:none;}
+.rem-card{background:#fff;border-radius:14px;border:1px solid #f0f0f0;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.toggle{width:38px;height:22px;border-radius:11px;cursor:pointer;position:relative;flex-shrink:0;transition:background 0.2s;}
+.toggle-dot{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;transition:left 0.15s;}
+input[type=number],input[type=text],input[type=date]{font-family:inherit;}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+.search-box{width:100%;padding:8px 12px;border-radius:10px;border:1px solid #e8e8e8;background:#f7f7f7;font-size:13px;color:#333;outline:none;font-family:inherit;}
+.over-badge{font-size:10px;background:#FEECEC;color:#C0392B;padding:1px 6px;border-radius:4px;flex-shrink:0;}
+.month-nav{background:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0;}
+.arrow-btn{background:none;border:none;color:#bbb;font-size:22px;cursor:pointer;line-height:1;padding:0 8px;}
+</style>
+</head>
+<body>
+<div id="ph">
+<div class="sb"><span class="time">9:41</span><span class="title">SimJot</span><span>Bangkok · 100%</span></div>
+<div id="ca">
+
+<!-- SCREEN 0: DASHBOARD -->
+<div id="s0" class="screen">
+<div class="month-nav">
+<button class="arrow-btn">&#8249;</button>
+<div style="text-align:center;"><div style="font-size:15px;font-weight:600;color:#111;">เมษายน 2025</div><div style="font-size:11px;color:#999;">สรุปรายจ่าย</div></div>
+<button class="arrow-btn">&#8250;</button>
+</div>
+
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+<div><div style="font-size:11px;color:#999;margin-bottom:3px;">ใช้ไปแล้ว</div><div style="font-size:30px;font-weight:700;color:#111;">฿22,119</div></div>
+<div style="text-align:right;"><div style="font-size:11px;color:#999;margin-bottom:3px;">งบเดือนนี้</div><div style="font-size:17px;color:#888;">฿38,300</div></div>
+</div>
+<div class="prog-bar"><div class="prog-fill" style="width:57.8%;"></div></div>
+<div style="display:flex;justify-content:space-between;">
+<span style="font-size:11px;color:#999;">57.8% ของงบทั้งหมด</span>
+<span style="font-size:11px;font-weight:600;color:#1D9E75;">เหลือ ฿16,181</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">รายจ่ายตามหมวดหมู่</div>
+<div style="display:flex;align-items:center;gap:16px;">
+<div style="flex-shrink:0;"><canvas id="dc" width="110" height="110"></canvas></div>
+<div id="leg" style="flex:1;display:flex;flex-direction:column;gap:7px;font-size:12px;"></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">รายจ่ายรายสัปดาห์</div>
+<canvas id="bc" height="90"></canvas>
+</div>
+
+<div class="card" style="padding:0;overflow:hidden;">
+<div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f5f5f5;">
+<span style="font-size:13px;font-weight:600;color:#111;">รายการล่าสุด</span>
+<button onclick="goTab(2)" style="font-size:12px;color:#378ADD;background:none;border:none;cursor:pointer;font-family:inherit;">ดูทั้งหมด</button>
+</div>
+<div id="rl"></div>
+</div>
+</div>
+
+<!-- SCREEN 1: ADD -->
+<div id="s1" class="screen">
+<div class="hdr"><div><div class="hdr-title">บันทึกรายจ่าย</div></div></div>
+<div class="card">
+<div style="font-size:11px;color:#999;margin-bottom:8px;">จำนวนเงิน (บาท)</div>
+<div style="display:flex;align-items:baseline;gap:8px;">
+<span style="font-size:24px;color:#ccc;font-weight:300;">฿</span>
+<input type="number" id="amt" placeholder="0" style="flex:1;font-size:36px;font-weight:700;border:none;background:transparent;color:#111;outline:none;width:100%;">
+</div>
+</div>
+<div class="card">
+<div style="font-size:11px;color:#999;margin-bottom:10px;">หมวดหมู่</div>
+<div id="cg" style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;"></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden;">
+<div class="form-row"><span class="form-label">วันที่</span><input type="date" value="2025-04-29" style="font-size:13px;border:none;background:transparent;color:#333;outline:none;"></div>
+<div class="form-row"><input type="text" placeholder="บันทึกช่วยจำ..." style="width:100%;font-size:13px;border:none;background:transparent;color:#333;outline:none;"></div>
+<div class="form-row">
+<span class="form-label">ช่องทางชำระ</span>
+<div style="display:flex;gap:6px;">
+<button onclick="selP(this)" class="pay-btn">เงินสด</button>
+<button onclick="selP(this)" class="pay-btn">โอน</button>
+<button onclick="selP(this)" class="pay-btn">บัตร</button>
+</div>
+</div>
+</div>
+<div style="padding:0 16px;margin-top:14px;">
+<button class="btn-save" onclick="alert('บันทึกสำเร็จ! Phase 3 ต่อ Google Sheets จริง')">บันทึกรายจ่าย</button>
+<button class="btn-ocr" onclick="alert('OCR อ่านสลิปธนาคาร — Phase 3 (Tesseract.js)')">+ อ่านจากสลิปธนาคาร</button>
+</div>
+</div>
+
+<!-- SCREEN 2: TRANSACTIONS -->
+<div id="s2" class="screen">
+<div class="hdr">
+<div><div class="hdr-title">รายการทั้งหมด</div></div>
+</div>
+<div style="padding:10px 16px;background:#fff;border-bottom:1px solid #f0f0f0;">
+<input class="search-box" type="text" placeholder="ค้นหา..." oninput="filt(this.value)">
+</div>
+<div><div style="padding:8px 16px 4px;font-size:11px;color:#999;font-weight:600;">เมษายน 2025</div><div id="tl"></div></div>
+</div>
+
+<!-- SCREEN 3: BUDGET -->
+<div id="s3" class="screen">
+<div class="hdr"><div><div class="hdr-title">งบประมาณ</div><div class="hdr-sub">เมษายน 2025</div></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 16px 0;">
+<div class="card" style="margin:0;"><div style="font-size:11px;color:#999;margin-bottom:4px;">ใช้ไปแล้ว</div><div style="font-size:20px;font-weight:700;color:#E24B4A;">฿22,119</div></div>
+<div class="card" style="margin:0;"><div style="font-size:11px;color:#999;margin-bottom:4px;">คงเหลือ</div><div style="font-size:20px;font-weight:700;color:#1D9E75;">฿16,181</div></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden;margin-top:12px;">
+<div style="padding:12px 16px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center;">
+<span style="font-size:13px;font-weight:600;color:#111;">แยกตามหมวดหมู่</span>
+<button onclick="alert('แก้ไขงบ Phase 3')" style="font-size:12px;color:#378ADD;background:none;border:none;cursor:pointer;font-family:inherit;">แก้ไขงบ</button>
+</div>
+<div id="bl"></div>
+</div>
+</div>
+
+<!-- SCREEN 4: REMINDERS -->
+<div id="s4" class="screen">
+<div class="hdr" style="justify-content:space-between;">
+<div><div class="hdr-title">การแจ้งเตือน</div><div class="hdr-sub">ค่าใช้จ่ายประจำ</div></div>
+<button onclick="alert('เพิ่มแจ้งเตือน Phase 3')" style="font-size:12px;padding:7px 13px;border-radius:10px;border:1px solid #e0e0e0;background:#fff;color:#333;cursor:pointer;font-family:inherit;">+ เพิ่ม</button>
+</div>
+<div id="rml" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px;"></div>
+</div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+<button class="nb on" data-i="0" onclick="goTab(0)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+หน้าแรก
+</button>
+<button class="nb" data-i="2" onclick="goTab(2)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.5" fill="currentColor"/><circle cx="3.5" cy="12" r="1.5" fill="currentColor"/><circle cx="3.5" cy="18" r="1.5" fill="currentColor"/></svg>
+รายการ
+</button>
+<button class="nb" data-i="1" onclick="goTab(1)" style="padding-top:2px;">
+<div class="fab-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+เพิ่ม
+</button>
+<button class="nb" data-i="3" onclick="goTab(3)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="9" width="4" height="11"/><rect x="10" y="4" width="4" height="16"/><rect x="18" y="12" width="4" height="8"/></svg>
+งบ
+</button>
+<button class="nb" data-i="4" onclick="goTab(4)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+แจ้งเตือน
+</button>
+</nav>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const CAT=[
+{id:1,n:'อาหาร',c:'#EF9F27',b:5000,s:3200},
+{id:2,n:'เดินทาง',c:'#378ADD',b:3000,s:1850},
+{id:3,n:'ช้อปปิ้ง',c:'#D4537E',b:2000,s:0},
+{id:4,n:'ที่พัก',c:'#1D9E75',b:8000,s:8000},
+{id:5,n:'สุขภาพ',c:'#7F77DD',b:1500,s:380},
+{id:6,n:'บันเทิง',c:'#D85A30',b:1000,s:450},
+{id:7,n:'การศึกษา',c:'#639922',b:2000,s:0},
+{id:8,n:'งาน',c:'#888780',b:1000,s:0},
+{id:9,n:'ชำระหนี้',c:'#E24B4A',b:5000,s:3200},
+{id:10,n:'สกินแคร์',c:'#B15C9E',b:2000,s:890},
+{id:11,n:'ค่าโทรศัพท์',c:'#185FA5',b:800,s:799},
+{id:12,n:'เสื้อผ้า',c:'#3B6D11',b:2000,s:0},
+{id:13,n:'ของขวัญ/บริจาค',c:'#BA7517',b:1000,s:500},
+{id:14,n:'ครอบครัว',c:'#0F6E56',b:3000,s:2500},
+{id:15,n:'อื่นๆ',c:'#5F5E5A',b:1000,s:350},
+];
+const TXN=[
+{d:'29 เม.ย.',ci:1,n:'ข้าวต้มเช้า + กาแฟ',a:185,p:'เงินสด'},
+{d:'29 เม.ย.',ci:2,n:'Grab ไปออฟฟิศ',a:320,p:'โอน'},
+{d:'28 เม.ย.',ci:10,n:'COSRX moisturizer',a:890,p:'บัตร'},
+{d:'28 เม.ย.',ci:1,n:'ข้าวมันไก่ กลางวัน',a:95,p:'เงินสด'},
+{d:'27 เม.ย.',ci:14,n:'ค่าอาหารครอบครัว',a:2500,p:'โอน'},
+{d:'26 เม.ย.',ci:11,n:'ค่าโทรศัพท์ AIS',a:799,p:'โอน'},
+{d:'25 เม.ย.',ci:9,n:'บัตรเครดิต SCB',a:3200,p:'โอน'},
+{d:'24 เม.ย.',ci:1,n:'ชาบูกับเพื่อน',a:680,p:'บัตร'},
+];
+const REM=[
+{id:1,t:'ค่าเช่า',a:5000,f:'ทุกวันที่ 1',on:true},
+{id:2,t:'บัตรเครดิต SCB',a:null,f:'แจ้งล่วงหน้า 3 วัน (วันที่ 15)',on:true},
+{id:3,t:'ค่าโทรศัพท์ AIS',a:799,f:'ทุกวันที่ 26',on:true},
+{id:4,t:'Fitness First',a:1290,f:'ทุกวันที่ 5',on:false},
+];
+let ch={};
+
+function goTab(i){
+for(let j=0;j<5;j++)document.getElementById('s'+j).style.display=j===i?'block':'none';
+document.querySelectorAll('.nb').forEach(b=>{b.classList.toggle('on',parseInt(b.dataset.i)===i);});
+document.getElementById('ca').scrollTop=0;
+if(i===0&&!ch.d)setTimeout(initCharts,50);
+}
+
+function initCharts(){
+if(typeof Chart==='undefined'){setTimeout(initCharts,100);return;}
+const top=[...CAT].filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,5);
+ch.d=new Chart(document.getElementById('dc'),{
+type:'doughnut',
+data:{labels:top.map(x=>x.n),datasets:[{data:top.map(x=>x.s),backgroundColor:top.map(x=>x.c),borderWidth:0}]},
+options:{cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:x=>`฿${x.raw.toLocaleString()}`}}},animation:{duration:600}}
+});
+document.getElementById('leg').innerHTML=top.map(x=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;"><div style="display:flex;align-items:center;gap:6px;min-width:0;"><span class="dot" style="background:${x.c};"></span><span style="color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x.n}</span></div><span style="font-weight:600;color:#111;flex-shrink:0;">฿${x.s.toLocaleString()}</span></div>`).join('');
+ch.b=new Chart(document.getElementById('bc'),{
+type:'bar',
+data:{labels:['ส.ที่ 1','ส.ที่ 2','ส.ที่ 3','ส.ที่ 4','ส.นี้'],datasets:[{data:[5200,6100,7800,2619,505],backgroundColor:['#EF9F27','#EF9F27','#EF9F27','#EF9F27','#1D9E75'],borderRadius:5,borderSkipped:false}]},
+options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'฿'+v.toLocaleString(),font:{size:10},color:'#aaa'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},x:{ticks:{font:{size:10},color:'#aaa'},grid:{display:false},border:{display:false}}},animation:{duration:600}}
+});
+}
+
+function txnRow(t,border){
+const cat=CAT.find(x=>x.id===t.ci)||CAT[14];
+return`<div class="txn-row" style="${border?'':'border-bottom:none;'}"><span class="dot" style="background:${cat.c};"></span><div style="flex:1;min-width:0;"><div style="font-size:13px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.n}</div><div style="font-size:11px;color:#999;margin-top:1px;">${cat.n} · ${t.p}</div></div><span style="font-size:14px;font-weight:600;color:#111;flex-shrink:0;">-฿${t.a.toLocaleString()}</span></div>`;
+}
+
+function filt(v){
+const f=TXN.filter(t=>!v||t.n.toLowerCase().includes(v.toLowerCase())||(CAT.find(x=>x.id===t.ci)||{n:''}).n.includes(v));
+document.getElementById('tl').innerHTML=f.map((t,i)=>{
+const cat=CAT.find(x=>x.id===t.ci)||CAT[14];
+return`<div style="background:#fff;margin:0 16px 8px;border-radius:12px;border:1px solid #f0f0f0;padding:12px 14px;display:flex;align-items:center;gap:10px;"><span class="dot" style="background:${cat.c};"></span><div style="flex:1;min-width:0;"><div style="font-size:13px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.n}</div><div style="font-size:11px;color:#999;margin-top:2px;">${cat.n} · ${t.d} · ${t.p}</div></div><div style="text-align:right;flex-shrink:0;"><div style="font-size:14px;font-weight:600;color:#111;">-฿${t.a.toLocaleString()}</div><button onclick="alert('แก้ไข/ลบ Phase 3')" style="font-size:11px;color:#378ADD;background:none;border:none;cursor:pointer;font-family:inherit;padding:0;margin-top:2px;">แก้ไข</button></div></div>`;
+}).join('');
+}
+
+function selCat(el,id){
+document.querySelectorAll('#cg .cat-btn').forEach(b=>{
+const c=CAT.find(x=>x.id===parseInt(b.dataset.i));
+const on=parseInt(b.dataset.i)===id;
+b.style.background=on?(c.c+'18'):'#f7f7f7';
+b.style.borderColor=on?c.c:'#ebebeb';
+b.style.color=on?c.c:'#333';
+});
+}
+
+function selP(el){
+document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('on'));
+el.classList.add('on');
+}
+
+function togR(id){
+const r=REM.find(x=>x.id===id);if(!r)return;r.on=!r.on;
+const el=document.getElementById('t'+id);
+el.style.background=r.on?'#1D9E75':'#ddd';
+el.querySelector('.toggle-dot').style.left=r.on?'18px':'2px';
+}
+
+// Render
+document.getElementById('rl').innerHTML=TXN.slice(0,4).map((t,i)=>txnRow(t,i<3)).join('');
+filt('');
+
+document.getElementById('bl').innerHTML=CAT.filter(c=>c.b>0).map((c,i,arr)=>{
+const pct=Math.min(100,Math.round(c.s/c.b*100));const ov=c.s>=c.b;
+return`<div class="budget-row ${i===arr.length-1?'':''}"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;"><div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;"><span class="dot" style="background:${c.c};"></span><span style="font-size:13px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.n}</span>${ov?'<span class="over-badge">เต็มงบ</span>':''}</div><span style="font-size:11px;color:${ov?'#E24B4A':'#999'};flex-shrink:0;margin-left:8px;">฿${c.s.toLocaleString()}/฿${c.b.toLocaleString()}</span></div><div class="prog-bar" style="height:4px;"><div style="height:100%;width:${pct}%;background:${ov?'#E24B4A':c.c};border-radius:2px;"></div></div></div>`;
+}).join('');
+
+document.getElementById('rml').innerHTML=REM.map(r=>`<div class="rem-card"><div style="width:34px;height:34px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:#111;">${r.t}</div><div style="font-size:11px;color:#999;margin-top:2px;">${r.f}${r.a?' · ฿'+r.a.toLocaleString():''}</div></div><div id="t${r.id}" class="toggle" style="background:${r.on?'#1D9E75':'#ddd'};" onclick="togR(${r.id})"><div class="toggle-dot" style="left:${r.on?'18px':'2px'};"></div></div></div>`).join('');
+
+document.getElementById('cg').innerHTML=CAT.map(c=>`<button class="cat-btn" onclick="selCat(this,${c.id})" data-i="${c.id}"><span class="dot" style="background:${c.c};"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.n}</span></button>`).join('');
+
+goTab(0);
+</script>
+<script src="api.js"></script>
+</body>
+</html>
