@@ -2,7 +2,7 @@
 // วางไฟล์นี้ไว้ในโฟลเดอร์เดียวกับ index.html
 // แก้ SCRIPT_URL ให้ตรงกับ Web App URL ที่ Deploy ไว้
 
-const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsMhcPx_gYMFR72g-KcrfNG1uJkXmBYO6wXlgYSh2T-I4sUee2QsQHdRS_Ji3IEyLs-Q/exec";
 
 // ============================
 // Core fetch helpers
