@@ -1,60 +1,60 @@
 // SimJot — app.js
-// วางไฟล์นี้ในโฟลเดอร์เดียวกับ index.html และ api.js
-// แล้วเพิ่มใน index.html ก่อน </body> :
-//   <script src="api.js"></script>
-//   <script src="app.js"></script>
+
+// ============================
+// getCat — lookup by string id (API) or numeric id (UI)
+// ============================
+function getCat(catId) {
+  const cat = typeof catId === 'number'
+    ? CAT.find(x => x.id === catId)
+    : CAT.find(x => x.str === catId);
+  return cat || CAT[CAT.length - 1]; // fallback to 'other'
+}
 
 // ============================
 // 1. บันทึกรายจ่าย
 // ============================
 async function handleSave() {
-  const amountEl  = document.querySelector('input[type="number"]');
-  const noteEl    = document.querySelector('input[placeholder*="กาแฟ"]');
-  const dateEl    = document.querySelector('input[type="text"]');
-  const amount    = parseFloat(amountEl?.value);
-  const note      = noteEl?.value || "";
-  const date      = dateEl?.value || new Date().toISOString().slice(0, 10);
+  const amountEl = document.getElementById('amt');
+  const noteEl   = document.getElementById('note-input');
+  const dateEl   = document.getElementById('date-input');
+  const amount   = parseFloat(amountEl?.value);
+  const note     = noteEl?.value || '';
+  const date     = dateEl?.value || new Date().toISOString().slice(0, 10);
 
-  // หา category ที่เลือกอยู่
-  const selected  = document.querySelector('[data-catbtn][style*="border-color: rgb"]');
-  const category  = selected?.dataset?.catbtn || "other";
-
-  // หา payment type
-  const payBtn    = ['cash','transfer','credit'].find(t => {
-    const b = document.getElementById('pay-' + t);
-    return b?.style.background.includes('E1F5EE');
-  }) || 'cash';
+  const payEl    = document.querySelector('.pay-btn.on');
+  const payMap   = { 'pay-cash': 'cash', 'pay-transfer': 'transfer', 'pay-card': 'card' };
+  const payment_type = payMap[payEl?.id] || 'cash';
 
   if (!amount || amount <= 0) {
-    showToast("กรุณาใส่จำนวนเงินก่อนครับ", "error");
+    showToast('กรุณาใส่จำนวนเงินก่อนครับ', 'error');
     return;
   }
 
   const btn = document.getElementById('save-btn');
-  btn.textContent = "กำลังบันทึก...";
+  btn.textContent = 'กำลังบันทึก...';
   btn.disabled = true;
 
   try {
     await SimJotAPI.addTransaction({
       date,
       amount,
-      category,
+      category: selectedCat,
       note,
-      payment_type: payBtn,
-      source: "manual"
+      payment_type,
+      source: 'manual',
     });
 
-    showToast("บันทึกแล้ว ✓", "success");
-    amountEl.value = "";
-    noteEl.value   = "";
-    showScreen('s-home', 'nav-home');
+    showToast('บันทึกแล้ว ✓', 'success');
+    amountEl.value = '';
+    noteEl.value   = '';
+    goTab(0);
     await loadDashboard();
 
   } catch (err) {
-    showToast("บันทึกไม่ได้ ลองใหม่ครับ", "error");
+    showToast('บันทึกไม่ได้ ลองใหม่ครับ', 'error');
     console.error(err);
   } finally {
-    btn.textContent = "บันทึกรายจ่าย";
+    btn.textContent = 'บันทึกรายจ่าย';
     btn.disabled = false;
   }
 }
@@ -65,28 +65,25 @@ async function handleSave() {
 async function loadDashboard() {
   try {
     const txns    = await SimJotAPI.getTransactions();
-    const month   = SimJotAPI.currentMonth();          // "2025-04"
+    const month   = SimJotAPI.currentMonth();
     const spent   = SimJotAPI.calcSpentByCategory(txns, month);
     const budgets = await SimJotAPI.getBudgets();
 
-    // คำนวณยอดรวมเดือนนี้
-    const totalSpent = Object.values(spent).reduce((s, v) => s + v, 0);
+    const totalSpent  = Object.values(spent).reduce((s, v) => s + v, 0);
     const totalBudget = budgets
       .filter(b => b.month === month)
       .reduce((s, b) => s + Number(b.budget_amount), 0);
 
-    // อัปเดต summary card
-    const spentEl = document.querySelector('#s-home .spent-amount');
+    const spentEl = document.getElementById('spent-amount');
     if (spentEl) spentEl.textContent = '฿' + totalSpent.toLocaleString();
 
-    const leftEl  = document.querySelector('#s-home .left-amount');
-    if (leftEl)  leftEl.textContent  = '฿' + Math.max(0, totalBudget - totalSpent).toLocaleString();
+    const leftEl  = document.getElementById('left-amount');
+    if (leftEl)   leftEl.textContent = '฿' + Math.max(0, totalBudget - totalSpent).toLocaleString();
 
-    // อัปเดตรายการล่าสุด
     renderRecentFromData(txns.slice(0, 5));
 
   } catch (err) {
-    console.error("loadDashboard error:", err);
+    console.error('loadDashboard error:', err);
   }
 }
 
@@ -94,23 +91,23 @@ async function loadDashboard() {
 // 3. Render รายการล่าสุดจากข้อมูลจริง
 // ============================
 function renderRecentFromData(txns) {
-  const el = document.getElementById('recent-list');
+  const el = document.getElementById('rl');
   if (!el) return;
   if (txns.length === 0) {
-    el.innerHTML = '<p style="font-size:13px;color:var(--color-text-secondary);text-align:center;padding:20px 0">ยังไม่มีรายการครับ</p>';
+    el.innerHTML = '<p style="font-size:13px;color:#999;text-align:center;padding:20px 0;">ยังไม่มีรายการครับ</p>';
     return;
   }
   el.innerHTML = txns.map((t, i) => {
     const c = getCat(t.category);
-    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;${i ? 'border-top:0.5px solid var(--color-border-tertiary)' : ''}">
-      <div class="dot" style="width:36px;height:36px;background:${c.bg};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <span style="font-size:11px;font-weight:500;color:${c.tc}">${c.short}</span>
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;${i ? 'border-top:1px solid #f5f5f5;' : ''}">
+      <div style="width:36px;height:36px;background:${c.bg};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-size:10px;font-weight:500;color:${c.tc};">${c.short}</span>
       </div>
-      <div style="flex:1;min-width:0">
-        <p style="font-size:13px;font-weight:500;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--color-text-primary)">${t.note || c.name}</p>
-        <p style="font-size:11px;color:var(--color-text-secondary);margin:0">${c.name} · ${t.date}</p>
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:500;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#111;">${t.note || c.n}</p>
+        <p style="font-size:11px;color:#999;margin:0;">${c.n} · ${t.date}</p>
       </div>
-      <span style="font-size:13px;font-weight:500;color:#D85A30;white-space:nowrap">-฿${Number(t.amount).toLocaleString()}</span>
+      <span style="font-size:13px;font-weight:500;color:#D85A30;white-space:nowrap;">-฿${Number(t.amount).toLocaleString()}</span>
     </div>`;
   }).join('');
 }
@@ -118,7 +115,7 @@ function renderRecentFromData(txns) {
 // ============================
 // 4. Toast notification
 // ============================
-function showToast(msg, type = "success") {
+function showToast(msg, type = 'success') {
   const old = document.getElementById('simjot-toast');
   if (old) old.remove();
   const t = document.createElement('div');
@@ -136,12 +133,10 @@ function showToast(msg, type = "success") {
 }
 
 // ============================
-// 5. Init — รันตอนโหลดหน้า
+// 5. Init
 // ============================
 document.addEventListener('DOMContentLoaded', async () => {
-  // wire ปุ่มบันทึก
-  const btn = document.querySelector('#s-add button[style*="background:#1D9E75"]');
-  if (btn) { btn.id = 'save-btn'; btn.onclick = handleSave; }
-  // โหลดข้อมูลจริงจาก Sheets
+  const btn = document.getElementById('save-btn');
+  if (btn) btn.onclick = handleSave;
   await loadDashboard();
 });

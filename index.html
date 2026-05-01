@@ -65,13 +65,13 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
-<div><div style="font-size:11px;color:#999;margin-bottom:3px;">ใช้ไปแล้ว</div><div style="font-size:30px;font-weight:700;color:#111;">฿22,119</div></div>
+<div><div style="font-size:11px;color:#999;margin-bottom:3px;">ใช้ไปแล้ว</div><div id="spent-amount" style="font-size:30px;font-weight:700;color:#111;">฿22,119</div></div>
 <div style="text-align:right;"><div style="font-size:11px;color:#999;margin-bottom:3px;">งบเดือนนี้</div><div style="font-size:17px;color:#888;">฿38,300</div></div>
 </div>
 <div class="prog-bar"><div class="prog-fill" style="width:57.8%;"></div></div>
 <div style="display:flex;justify-content:space-between;">
 <span style="font-size:11px;color:#999;">57.8% ของงบทั้งหมด</span>
-<span style="font-size:11px;font-weight:600;color:#1D9E75;">เหลือ ฿16,181</span>
+<span style="font-size:11px;font-weight:600;color:#1D9E75;">เหลือ <span id="left-amount">฿16,181</span></span>
 </div>
 </div>
 
@@ -112,19 +112,19 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <div id="cg" style="display:grid;grid-template-columns:repeat(2,1fr);gap:7px;"></div>
 </div>
 <div class="card" style="padding:0;overflow:hidden;">
-<div class="form-row"><span class="form-label">วันที่</span><input type="date" value="2025-04-29" style="font-size:13px;border:none;background:transparent;color:#333;outline:none;"></div>
-<div class="form-row"><input type="text" placeholder="บันทึกช่วยจำ..." style="width:100%;font-size:13px;border:none;background:transparent;color:#333;outline:none;"></div>
+<div class="form-row"><span class="form-label">วันที่</span><input id="date-input" type="date" value="2025-04-29" style="font-size:13px;border:none;background:transparent;color:#333;outline:none;"></div>
+<div class="form-row"><input id="note-input" type="text" placeholder="บันทึกช่วยจำ..." style="width:100%;font-size:13px;border:none;background:transparent;color:#333;outline:none;"></div>
 <div class="form-row">
 <span class="form-label">ช่องทางชำระ</span>
 <div style="display:flex;gap:6px;">
-<button onclick="selP(this)" class="pay-btn">เงินสด</button>
-<button onclick="selP(this)" class="pay-btn">โอน</button>
-<button onclick="selP(this)" class="pay-btn">บัตร</button>
+<button id="pay-cash" onclick="selP(this)" class="pay-btn">เงินสด</button>
+<button id="pay-transfer" onclick="selP(this)" class="pay-btn">โอน</button>
+<button id="pay-card" onclick="selP(this)" class="pay-btn">บัตร</button>
 </div>
 </div>
 </div>
 <div style="padding:0 16px;margin-top:14px;">
-<button class="btn-save" onclick="alert('บันทึกสำเร็จ! Phase 3 ต่อ Google Sheets จริง')">บันทึกรายจ่าย</button>
+<button id="save-btn" class="btn-save">บันทึกรายจ่าย</button>
 <button class="btn-ocr" onclick="alert('OCR อ่านสลิปธนาคาร — Phase 3 (Tesseract.js)')">+ อ่านจากสลิปธนาคาร</button>
 </div>
 </div>
@@ -195,22 +195,23 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const CAT=[
-{id:1,n:'อาหาร',c:'#EF9F27',b:5000,s:3200},
-{id:2,n:'เดินทาง',c:'#378ADD',b:3000,s:1850},
-{id:3,n:'ช้อปปิ้ง',c:'#D4537E',b:2000,s:0},
-{id:4,n:'ที่พัก',c:'#1D9E75',b:8000,s:8000},
-{id:5,n:'สุขภาพ',c:'#7F77DD',b:1500,s:380},
-{id:6,n:'บันเทิง',c:'#D85A30',b:1000,s:450},
-{id:7,n:'การศึกษา',c:'#639922',b:2000,s:0},
-{id:8,n:'งาน',c:'#888780',b:1000,s:0},
-{id:9,n:'ชำระหนี้',c:'#E24B4A',b:5000,s:3200},
-{id:10,n:'สกินแคร์',c:'#B15C9E',b:2000,s:890},
-{id:11,n:'ค่าโทรศัพท์',c:'#185FA5',b:800,s:799},
-{id:12,n:'เสื้อผ้า',c:'#3B6D11',b:2000,s:0},
-{id:13,n:'ของขวัญ/บริจาค',c:'#BA7517',b:1000,s:500},
-{id:14,n:'ครอบครัว',c:'#0F6E56',b:3000,s:2500},
-{id:15,n:'อื่นๆ',c:'#5F5E5A',b:1000,s:350},
+{id:1, str:'food',      n:'อาหาร',         short:'กิน',   c:'#EF9F27',bg:'#FFF3E0',tc:'#E65100',b:5000,s:3200},
+{id:2, str:'transport', n:'เดินทาง',        short:'เดิน',  c:'#378ADD',bg:'#E3F2FD',tc:'#1565C0',b:3000,s:1850},
+{id:3, str:'shopping',  n:'ช้อปปิ้ง',       short:'ช้อป',  c:'#D4537E',bg:'#FCE4EC',tc:'#AD1457',b:2000,s:0},
+{id:4, str:'housing',   n:'ที่พัก',          short:'บ้าน',  c:'#1D9E75',bg:'#E8F5E9',tc:'#2E7D32',b:8000,s:8000},
+{id:5, str:'health',    n:'สุขภาพ',         short:'สุข',   c:'#7F77DD',bg:'#EDE7F6',tc:'#4527A0',b:1500,s:380},
+{id:6, str:'entertain', n:'บันเทิง',        short:'บัน',   c:'#D85A30',bg:'#FBE9E7',tc:'#BF360C',b:1000,s:450},
+{id:7, str:'edu',       n:'การศึกษา',       short:'เรียน', c:'#639922',bg:'#F1F8E9',tc:'#33691E',b:2000,s:0},
+{id:8, str:'work',      n:'งาน',            short:'งาน',   c:'#888780',bg:'#F5F5F5',tc:'#424242',b:1000,s:0},
+{id:9, str:'debt',      n:'ชำระหนี้',       short:'หนี้',  c:'#E24B4A',bg:'#FFEBEE',tc:'#B71C1C',b:5000,s:3200},
+{id:10,str:'skincare',  n:'สกินแคร์',       short:'ผิว',   c:'#B15C9E',bg:'#F3E5F5',tc:'#6A1B9A',b:2000,s:890},
+{id:11,str:'phone',     n:'ค่าโทรศัพท์',    short:'โทร',   c:'#185FA5',bg:'#E3F2FD',tc:'#0D47A1',b:800,s:799},
+{id:12,str:'clothes',   n:'เสื้อผ้า',       short:'เสื้อ', c:'#3B6D11',bg:'#F1F8E9',tc:'#1B5E20',b:2000,s:0},
+{id:13,str:'gift',      n:'ของขวัญ/บริจาค',short:'ขวัญ',  c:'#BA7517',bg:'#FFF8E1',tc:'#F57F17',b:1000,s:500},
+{id:14,str:'family',    n:'ครอบครัว',       short:'ครอบ',  c:'#0F6E56',bg:'#E8F5E9',tc:'#004D40',b:3000,s:2500},
+{id:15,str:'other',     n:'อื่นๆ',          short:'อื่น',  c:'#5F5E5A',bg:'#FAFAFA',tc:'#616161',b:1000,s:350},
 ];
+let selectedCat='other';
 const TXN=[
 {d:'29 เม.ย.',ci:1,n:'ข้าวต้มเช้า + กาแฟ',a:185,p:'เงินสด'},
 {d:'29 เม.ย.',ci:2,n:'Grab ไปออฟฟิศ',a:320,p:'โอน'},
@@ -273,6 +274,7 @@ b.style.background=on?(c.c+'18'):'#f7f7f7';
 b.style.borderColor=on?c.c:'#ebebeb';
 b.style.color=on?c.c:'#333';
 });
+selectedCat=CAT.find(x=>x.id===id)?.str||'other';
 }
 
 function selP(el){
