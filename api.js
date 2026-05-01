@@ -2,7 +2,7 @@
 // วางไฟล์นี้ไว้ในโฟลเดอร์เดียวกับ index.html
 // แก้ SCRIPT_URL ให้ตรงกับ Web App URL ที่ Deploy ไว้
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHhE4Z_koVK1MAkkdMK0rnCe9nyg4kC6NQu-vSflBOy-_vV7tYnD8a1yw_9Hoe9s6X/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_5eFpangcgqoJ_nVcLzIaUnc6_JxdfLB6FxBfVExkWkVZbMoiwbQAtqb8_NBfDQCg/exec";
 
 // ============================
 // Core fetch helpers
@@ -21,13 +21,13 @@ async function apiGet(action) {
 
 async function apiPost(action, payload) {
   try {
-    const res = await fetch(SCRIPT_URL, {
+    await fetch(SCRIPT_URL, {
       method: "POST",
+      mode: "no-cors", // GAS doesn't send CORS headers on POST — no-cors bypasses preflight
       body: JSON.stringify({ action, data: payload }),
     });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    return data;
+    // response is opaque with no-cors; treat reaching here as success
+    return { ok: true };
   } catch (err) {
     console.error(`[SimJot] POST ${action} failed:`, err);
     throw err;
